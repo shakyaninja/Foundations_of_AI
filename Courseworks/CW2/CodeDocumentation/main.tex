@@ -1,0 +1,209 @@
+\documentclass[12pt, a4paper]{article}
+
+% Essential Packages
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{graphicx} % For images
+\usepackage{float}    % For figure placement
+\usepackage{booktabs} % For professional tables
+\usepackage{hyperref} % For clickable links
+\usepackage{amsmath}  % For math formulas
+\usepackage{titlesec} % For custom headings
+\usepackage{caption}  % For caption formatting
+
+% Page Geometry (Margins)
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% Title Page Information
+\title{Coursework 2: Implementation of a Computational Rationality Agent for Breast Cancer Diagnosis}
+\author{Luja Shakya (Student Number: A00073470)}
+\date{December 1, 2025}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    \Huge
+    \textbf{Implementation of a Computational Rationality Agent for Breast Cancer Diagnosis}
+    
+    \vspace{1.5cm}
+    
+    \Large
+    \textbf{Student Name:} Luja Shakya\\
+    \textbf{Student Number:} A00073470
+    
+    \vspace{1.5cm}
+    
+    \large
+    Foundations of Artificial Intelligence (CMP-L042-0)\\
+    \vspace{0.5cm}
+    Word Count: [Insert Word Count Here]
+    
+    \vfill
+    
+    \today
+    
+\end{titlepage}
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS
+%----------------------------------------------------------------------------------------
+\tableofcontents
+\newpage
+
+%----------------------------------------------------------------------------------------
+%	SECTION 1: PROJECT OVERVIEW
+%----------------------------------------------------------------------------------------
+\section{Project Overview}
+
+\subsection{Project Aim: The Agent-Environment Framework}
+This study implements a classical Artificial Intelligence (AI) agent designed to classify breast tumours as Malignant (M) or Benign (B). Building upon the theoretical framework established in Coursework 1, the system is defined as follows:
+
+\begin{itemize}
+    \item \textbf{The Agent:} A supervised machine learning classifier (Decision Tree, SVM, or Naïve Bayes) acting as a diagnostic support tool.
+    \item \textbf{The Environment:} The Wisconsin Diagnostic Breast Cancer (WDBC) dataset, representing a stochastic clinical setting bounded by 30 specific biophysical features derived from Fine Needle Aspirate (FNA) images.
+    \item \textbf{The Objective (Utility Function):} The agent does not seek pure accuracy. Instead, it seeks to maximise Expected Utility in a domain with asymmetric costs. A False Negative (classifying a malignant tumour as benign) has a catastrophic cost (potential patient mortality), whereas a False Positive incurs a lower cost (anxiety/unnecessary biopsy).
+\end{itemize}
+
+Therefore, a "rational" agent in this specific environment is defined not by perfect accuracy, but by maximising Recall (Sensitivity) to ensure patient safety, while maintaining acceptable Precision to reduce healthcare burden.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{new_figures/class_distribution.png} 
+    \caption{Class Distribution}
+    \label{fig:class_dist}
+\end{figure}
+
+%----------------------------------------------------------------------------------------
+%	SECTION 2: RESEARCH BACKGROUND
+%----------------------------------------------------------------------------------------
+\section{Research Background}
+
+\subsection{Key AI Concepts Used}
+Three distinct model architectures were implemented to represent different approaches to rationality within the agent design:
+
+\begin{enumerate}
+    \item \textbf{Decision Tree (Procedural Rationality):} Selected for its "white-box" transparency. It creates hierarchical IF-THEN rules that mimic human diagnostic reasoning. To prevent overfitting (a failure of generalisation), the tree depth was constrained.
+    
+    \item \textbf{Support Vector Machine (Substantive Rationality):} Selected for its ability to handle high-dimensional data effectively. A Radial Basis Function (RBF) kernel was used to map non-linearly separable data into a higher dimension where a clear margin could be established .
+    
+    \item \textbf{Gaussian Naïve Bayes (Probabilistic Inference):} Selected as a baseline for computational efficiency. It operates on the strong assumption of feature independence. While biologically unrealistic (e.g., tumour radius and area are correlated), it provides a probabilistic confidence score rather than just a binary classification.
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+%	SECTION 3: IMPLEMENTATION
+%----------------------------------------------------------------------------------------
+\section{Implementation (Environment and Agent Design)}
+
+The implementation pipeline was constructed using Python and the scikit-learn library, adhering to industry-standard practices for reproducibility and modularity.
+
+\subsection{Environment and Data Preprocessing}
+The agent's perception is limited to the provided WDBC dataset. The following preprocessing steps were taken to prepare the environment:
+
+\begin{itemize}
+    \item \textbf{Label Encoding:} The target variable Diagnosis was encoded ($M=1$, $B=0$). This establishes "Malignant" as the positive class, which is crucial for correctly calculating Recall.
+    \item \textbf{Feature Scaling:} Standardization ($z=(x-\mu)/\sigma$) was applied to all 30 input features. This is mathematically necessary for the Support Vector Machine (SVM), which calculates distances in high-dimensional space, and beneficial for the convergence of other algorithms \cite{svmscikitlearn}.
+\end{itemize}
+
+\subsection{Validation Strategy}
+To ensure the agent acts rationally on unseen patients, the system uses Stratified 10-Fold Cross-Validation. This method splits the 569 instances into 10 subsets, preserving the Malignant-to-Benign ratio in each fold. This provides a robust estimate of generalisation performance, minimising the risk that the agent has simply "memorised" the training data.
+
+%----------------------------------------------------------------------------------------
+%	SECTION 4: EXPERIMENTS, RESULTS AND EVALUATION
+%----------------------------------------------------------------------------------------
+\section{Experiments, Results and Evaluation}
+
+\subsection{Results Summary}
+The models were evaluated using Recall (primary utility metric), F1-Score (harmonic mean of precision/recall), and ROC-AUC (discriminative ability). The average performance across 10 folds is summarised below in Table \ref{tab:metrics}.
+
+\begin{table}[H]
+    \centering
+    \caption{Performance Metrics Comparison (10-Fold CV)}
+    \label{tab:metrics}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Model} & \textbf{Mean Recall} & \textbf{Mean F1-Score} & \textbf{Mean ROC-AUC} \\
+        & \textbf{(Sensitivity)} & & \\
+        \midrule
+        Support Vector Machine (SVM) & \textbf{0.962121} & \textbf{0.966830} & \textbf{0.995637} \\
+        Decision Tree & 0.886580 & 0.902629 & 0.916675 \\
+        Naïve Bayes & 0.895671 & 0.906102 & 0.985593 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{0.2cm}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    % REPLACE filename below with your uploaded image
+    \includegraphics[width=0.8\textwidth]{new_figures/Model_metric_comparison.png} 
+    \caption{Model Metrics Comparison: Recall, F1 Score, and ROC-AUC. [Source: 81-87]}
+    \label{fig:metrics_comparison}
+\end{figure}
+
+\subsection{Interpretation and Evaluation}
+\textbf{Utility Analysis:} The SVM demonstrated the highest degree of rationality defined by our utility function. With a Recall of $\approx 96\%$, it minimises the catastrophic error of False Negatives most effectively.
+
+\textbf{Model Comparison:} The Decision Tree, while interpretable, showed higher variance and lower Recall, indicating it is less robust in this environment. Naïve Bayes achieved a high ROC-AUC, suggesting strong discriminative power, but its default decision boundary yielded lower Recall than the SVM.
+
+Visualisations generated in the notebook (Confusion Matrices and ROC Curves) further confirmed that the SVM maintained the highest True Positive rate across various decision thresholds.
+
+\begin{figure}[H]
+    \centering
+    % REPLACE filename below with your uploaded image
+    \includegraphics[width=1.0\textwidth]{new_figures/confusion_matrix.png} 
+    \caption{Confusion Matrix Comparison}
+    \label{fig:confusion_matrix}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % REPLACE filename below with your uploaded image
+    \includegraphics[width=0.8\textwidth]{new_figures/ROC-AUC_curve_comparison.png} 
+    \caption{ROC-AUC Curve Comparison (Test Set Evaluation). SVM and Naive Bayes show superior AUC (0.99).}
+    \label{fig:roc_curve}
+\end{figure}
+
+%----------------------------------------------------------------------------------------
+%	SECTION 5: CONCLUSIONS
+%----------------------------------------------------------------------------------------
+\section{Conclusions and Discussion}
+
+\subsection{Bounded Rationality}
+This assessment highlights the concept of Bounded Rationality. The Decision Tree agent is bounded by its need for axis-parallel splits, making it incapable of capturing complex biological non-linearities. In contrast, the SVM exhibits high substantive rationality (excellent outcomes) but lacks procedural rationality. It acts as a "black box," offering no explanation for its diagnosis. This presents a trade-off: we sacrifice the ability to understand the agent's reasoning (interpretability) to achieve the objective of saving more lives (higher Recall).
+
+\subsection{Failure Analysis}
+The Naïve Bayes model underperformed the SVM on Recall. This is likely due to its core assumption of feature independence. In the WDBC dataset, features like \texttt{radius\_mean}, \texttt{perimeter\_mean}, and \texttt{area\_mean} are mathematically coupled. The agent's inability to perceive these correlations represents a cognitive limitation, leading to overconfident but occasionally incorrect probability estimates.
+
+\subsection{Rationality vs. Accuracy}
+As argued in Coursework 1, maximising "Accuracy" would be irrational. An agent that classifies every tumour as Benign might achieve $\approx 63\%$ accuracy (based on class distribution) but would kill every patient with cancer. The implemented pipeline correctly prioritised Recall. However, the SVM still produced a small number of False Positives. In a clinical environment, this is an acceptable "cost" of rationality. It is rational to biopsy a benign tumour to ensure a malignant one is not missed.
+
+%----------------------------------------------------------------------------------------
+%	REFERENCES
+%----------------------------------------------------------------------------------------
+\newpage
+\begin{thebibliography}{99}
+
+\bibitem{svmscikitlearn}[Scikit-learn developers, "Support Vector Machines," Scikit-learn.org. [Online]. Available: https://scikit-learn.org/stable/modules/svm.html.]
+
+% Add any additional references used in your code/research here following IEEE format
+
+\end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+%	APPENDICES
+%----------------------------------------------------------------------------------------
+\newpage
+\appendix
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
+
+\section{Gantt Chart}
+\includegraphics[width=1\textwidth]{new_figures/ganttchart.jpg}
+
+\end{document}
